@@ -1,0 +1,120 @@
+<?php
+	include "dbHandler.php";
+?>
+<!DOCTYPE html> 
+<html> 
+	<head> 
+		<title>AJAX</title> 
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" > 
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+		<script src = "javascript/jquery-3.1.1.min.js" type='text/javascript'> </script>
+		<script src = "javascript/jquery.validate.js" type='text/javascript'> </script>
+		<style>
+			table,th,td 
+			{
+				border : 1px solid black;
+				border-collapse: collapse;
+			}
+			th,td 	
+			{
+				padding: 5px;
+			}
+		</style>
+	</head> 
+	<body>
+		<div id = "insertData">
+			<h2>Enter User Info</h2>
+			<form id = "insertForm" method = "post" action = "insert.php">
+				<input type = "text" id = "userNameID" name = "userName" placeholder = "Name"></input>
+				<input type = "text" id = "userAgeID" name = "userAge" placeholder = "Age"></input>
+				<button>Enter</button><span id ="result"></span>
+			</form>
+			<script>
+				$("#insertForm").submit(function(e){
+					e.preventDefault();
+					$.post(
+						$("#insertForm").attr("action"),
+						$("#insertForm :input").serializeArray(),
+						function(result)
+						{
+							if (result != "success")
+							{
+								$("#insertForm")[0].reset();
+								$("#result").html("Entry inserted Successfully").css('color', 'green');
+							}
+							else 
+							{
+								$("#result").html("Error occured").css('color', 'red');
+							}
+						}
+					);
+				});
+			</script>
+		</div>
+		<div id = "retrieveSelectData">
+			<h2>Retrieve User Info</h2>
+			<input type = "text" id = "retrieveSelectDataUserName" name = "retrieveSelectDataUserName" placeholder = "Name"></input>
+			<script>
+				$(document).ready(function()
+				{
+					var searchRequest = null;
+					
+					$("#retrieveSelectDataUserName").keyup(function()
+					{
+						var retrieveSelectDataUserNameVal = this.value;
+						var minlength = 0;
+						var that = this,
+						value = $(this).val();
+						$("#showSelectData").load("retrieveLikeData.php")
+						var getUserQuery = "Select * from user where userName like '%"+ retrieveSelectDataUserNameVal +"%' ORDER BY `user`.`userID` ASC";
+						if (value.length >= minlength ) 
+						{
+							if (searchRequest != null || value == "") 
+							{
+								searchRequest.abort();
+							}
+							searchRequest = $.ajax({
+								type: "POST",
+								url: "retrieveLikeData.php",
+								data: {'getUserQuery' : getUserQuery},
+								success: function(msg)
+								{
+									console.log(msg);
+									var dataJSON = msg;
+									 $.ajax({
+										type: "post",
+										url: "parseJSONData.php",
+										data: {'parseUserRequest': dataJSON},
+										success: function (data) 
+										{
+											console.log(data);
+											if (value==$(that).val())	//we need to check if the value is the same 	
+											{
+												//alert(msg);
+												$("#showSelectData").html(data);
+											}
+											if (value == "" || data == "")
+											{
+												$("#showSelectData").html("");
+											}
+										}
+									});
+								}
+							});
+						}
+					});
+				});
+			</script>
+		</div>
+		<div id ="showData">
+			<script>
+				$(document).ready(function()
+				{
+					//$("#showData").load("getData.php");
+				});
+			</script>
+		</div>
+		<div id ="showSelectData">
+		</div>
+	</body> 
+</html>
